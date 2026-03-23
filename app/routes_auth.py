@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from app.models import (
     LoginRequest,
+    RegisterRequest,
     TokenResponse,
     UserResponse,
     ChangePasswordRequest,
@@ -42,6 +43,35 @@ def clear_auth_cookie(response: Response):
     response.delete_cookie(key=COOKIE_NAME, path="/")
 
 
+@router.post("/register")
+async def register(request: RegisterRequest):
+    """Crée un compte en attente de validation par un admin."""
+    if len(request.username.strip()) < 3:
+        raise HTTPException(
+            status_code=400, detail="Nom d'utilisateur trop court (min 3 caractères)"
+        )
+    if len(request.password) < 6:
+        raise HTTPException(
+            status_code=400, detail="Mot de passe trop court (min 6 caractères)"
+        )
+
+    async with get_connection() as cursor:
+        await cursor.execute(
+            "SELECT id FROM users WHERE username = %s", (request.username.strip(),)
+        )
+        if await cursor.fetchone():
+            raise HTTPException(
+                status_code=409, detail="Ce nom d'utilisateur est déjà pris"
+            )
+
+        password_hash = get_password_hash(request.password)
+        await cursor.execute(
+            "INSERT INTO users (username, password_hash, is_admin, is_approved) VALUES (%s, %s, 0, 0)",
+            (request.username.strip(), password_hash),
+        )
+    return {"message": "Inscription en attente de validation par un administrateur"}
+
+
 @router.post("/login", response_model=TokenResponse)
 async def login(
     response: Response,
@@ -49,6 +79,11 @@ async def login(
 ):
     """Authentifie un utilisateur et retourne un token JWT."""
     user = await authenticate_user(form_data.username, form_data.password)
+    if user == "not_approved":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Votre compte est en attente de validation par un administrateur",
+        )
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -68,6 +103,11 @@ async def login(
 async def login_json(response: Response, request: LoginRequest):
     """Authentifie un utilisateur via JSON et retourne un token JWT."""
     user = await authenticate_user(request.username, request.password)
+    if user == "not_approved":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Votre compte est en attente de validation par un administrateur",
+        )
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -121,3 +161,15 @@ async def change_password(
         )
 
     return {"message": "Mot de passe modifié avec succès"}
+
+
+@router.delete("/me")
+async def delete_account(
+    response: Response,
+    current_user: Annotated[dict, Depends(get_current_user)],
+):
+    """Supprime le compte de l'utilisateur connecté."""
+    async with get_connection() as cursor:
+        await cursor.execute("DELETE FROM users WHERE id = %s", (current_user["id"],))
+    clear_auth_cookie(response)
+    return {"message": "Compte supprimé"}

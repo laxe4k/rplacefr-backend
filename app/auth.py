@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from typing import Annotated, Optional
+from typing import Annotated, Optional, Union
 from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
@@ -58,19 +58,21 @@ async def get_user_by_username(username: str) -> dict | None:
     """Récupère un utilisateur par son nom d'utilisateur."""
     async with get_connection() as cursor:
         await cursor.execute(
-            "SELECT id, username, password_hash, is_admin FROM users WHERE username = %s",
+            "SELECT id, username, password_hash, is_admin, is_approved FROM users WHERE username = %s",
             (username,),
         )
         return await cursor.fetchone()
 
 
-async def authenticate_user(username: str, password: str) -> dict | None:
+async def authenticate_user(username: str, password: str) -> Union[dict, str, None]:
     """Authentifie un utilisateur."""
     user = await get_user_by_username(username)
     if not user:
         return None
     if not verify_password(password, user["password_hash"]):
         return None
+    if not user.get("is_approved"):
+        return "not_approved"
     return user
 
 
@@ -128,7 +130,10 @@ async def create_default_admin():
             # Créer un admin par défaut (username: admin, password: admin)
             password_hash = get_password_hash("admin")
             await cursor.execute(
-                "INSERT INTO users (username, password_hash, is_admin) VALUES (%s, %s, %s)",
-                ("admin", password_hash, True),
+                "INSERT INTO users (username, password_hash, is_admin, is_approved) VALUES (%s, %s, %s, %s)",
+                ("admin", password_hash, True, True),
             )
             print("Compte admin par défaut créé (username: admin, password: admin)")
+        else:
+            # S'assurer que tous les admins existants sont approuvés
+            await cursor.execute("UPDATE users SET is_approved = 1 WHERE is_admin = 1")

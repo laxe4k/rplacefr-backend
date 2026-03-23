@@ -56,10 +56,24 @@ async def init_database():
                 `username` varchar(255) NOT NULL UNIQUE,
                 `password_hash` varchar(255) NOT NULL,
                 `is_admin` tinyint(1) NOT NULL DEFAULT 0,
+                `is_approved` tinyint(1) NOT NULL DEFAULT 0,
                 `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY (`id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         """
+        )
+
+        # Migration: ajouter is_approved si la colonne n'existe pas encore
+        try:
+            await cursor.execute(
+                "ALTER TABLE `users` ADD COLUMN `is_approved` tinyint(1) NOT NULL DEFAULT 0"
+            )
+        except Exception:
+            pass  # La colonne existe déjà
+
+        # Approuver automatiquement tous les admins existants
+        await cursor.execute(
+            "UPDATE `users` SET `is_approved` = 1 WHERE `is_admin` = 1"
         )
 
         # Table options
