@@ -15,4 +15,5 @@ services:
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - JWT_EXPIRE_MINUTES=${JWT_EXPIRE_MINUTES}
       - COOKIE_SECURE=${COOKIE_SECURE}
+      - CORS_ORIGINS=${CORS_ORIGINS}
     restart: unless-stopped
