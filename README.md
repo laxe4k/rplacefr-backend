@@ -1,5 +1,8 @@
 # r/placeFR Backend
 
+![GitHub Release](https://img.shields.io/github/v/release/laxe4k/rplacefr-backend)
+![GitHub License](https://img.shields.io/github/license/laxe4k/rplacefr-backend)
+
 Backend API pour le site r/placeFR, construit avec FastAPI + Python.
 
 ## Installation
