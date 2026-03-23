@@ -34,9 +34,21 @@ CREATE TABLE
         `username` varchar(255) NOT NULL UNIQUE,
         `password_hash` varchar(255) NOT NULL,
         `is_admin` tinyint (1) NOT NULL DEFAULT 0,
+        `is_approved` tinyint (1) NOT NULL DEFAULT 0,
         `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (`id`)
     ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+-- Migration: ajouter is_approved si la table existe déjà
+ALTER TABLE `users`
+ADD COLUMN IF NOT EXISTS `is_approved` tinyint (1) NOT NULL DEFAULT 0;
+
+-- Les admins existants sont automatiquement approuvés
+UPDATE `users`
+SET
+    `is_approved` = 1
+WHERE
+    `is_admin` = 1;
 
 -- Insérer les données par défaut
 INSERT INTO

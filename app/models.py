@@ -35,6 +35,11 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class RegisterRequest(BaseModel):
+    username: str
+    password: str
+
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
@@ -44,6 +49,26 @@ class UserResponse(BaseModel):
     id: int
     username: str
     is_admin: bool
+
+
+class PendingUserItem(BaseModel):
+    id: int
+    username: str
+    created_at: str
+
+
+class PendingUsersResponse(BaseModel):
+    users: list[PendingUserItem]
+
+
+class ApprovedUserItem(BaseModel):
+    id: int
+    username: str
+    created_at: str
+
+
+class ApprovedUsersResponse(BaseModel):
+    users: list[ApprovedUserItem]
 
 
 class ChangePasswordRequest(BaseModel):
