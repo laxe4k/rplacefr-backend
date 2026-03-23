@@ -56,6 +56,17 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 - `app/auth.py` - Authentification JWT avec cookies httpOnly
 - `app/twitch.py` - Intégration API Twitch
 
+## Docker
+
+```bash
+# Avec docker-compose
+docker compose up -d
+
+# Ou manuellement
+docker build -t rplacefr-backend .
+docker run -p 8000:8000 --env-file .env rplacefr-backend
+```
+
 ## Endpoints API
 
 - `GET /api/config` - Récupère la configuration (event actif, liens)
