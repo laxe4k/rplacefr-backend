@@ -1,6 +1,6 @@
 # r/placeFR Backend
 
-Backend API pour le site r/placeFR, construit avec FastAPI.
+Backend API pour le site r/placeFR, construit avec FastAPI + Python.
 
 ## Installation
 
@@ -31,20 +31,32 @@ DB_NAME=rplacefr
 
 TWITCH_CLIENT_ID=your_client_id
 TWITCH_CLIENT_SECRET=your_client_secret
+
+COOKIE_SECURE=false  # true en production (HTTPS)
 ```
 
 ## Lancement
 
 ```bash
-# Mode développement
+# Mode développement avec hot-reload
 uvicorn app.main:app --reload
 
 # Mode production
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
+## Structure du projet
+
+- `app/main.py` - Point d'entrée de l'application FastAPI
+- `app/routes_*.py` - Routes API (auth, config, streamers, links)
+- `app/database.py` - Configuration de la connexion MySQL
+- `app/auth.py` - Authentification JWT avec cookies httpOnly
+- `app/twitch.py` - Intégration API Twitch
+
 ## Endpoints API
 
 - `GET /api/config` - Récupère la configuration (event actif, liens)
 - `GET /api/streamers` - Récupère la liste des streamers avec leur statut live
 - `GET /api/health` - Health check
+- `POST /api/login` - Connexion admin
+- `POST /api/logout` - Déconnexion
