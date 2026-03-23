@@ -1,5 +1,4 @@
 from pydantic_settings import BaseSettings
-from pydantic import field_validator
 from functools import lru_cache
 
 
@@ -23,15 +22,14 @@ class Settings(BaseSettings):
     # Cookie
     cookie_secure: bool = False  # True en production (HTTPS)
 
-    # CORS - peut être défini via env var comme "https://example.com,https://other.com"
-    cors_origins: list[str] = ["http://localhost:5173", "http://localhost:3000"]
+    # CORS - définir via env var comme "https://example.com,https://other.com"
+    cors_origins: str = "http://localhost:5173,http://localhost:3000"
 
-    @field_validator("cors_origins", mode="before")
-    @classmethod
-    def parse_cors_origins(cls, v: str | list[str]) -> list[str]:
-        if isinstance(v, str):
-            return [origin.strip() for origin in v.split(",") if origin.strip()]
-        return v
+    @property
+    def cors_origins_list(self) -> list[str]:
+        return [
+            origin.strip() for origin in self.cors_origins.split(",") if origin.strip()
+        ]
 
     class Config:
         env_file = ".env"
