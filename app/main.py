@@ -54,4 +54,4 @@ app.include_router(admin_router)
 
 @app.get("/")
 async def root():
-    return {"message": "r/placeFR API", "version": "1.0.0"}
+    return {"message": "r/placeFR API", "version": "1.1.0"}
